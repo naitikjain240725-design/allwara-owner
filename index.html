@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Allwara - Owner Panel</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --primary-dark: #357abd;
+            --accent: #7c5fe6;
+            --bg: #f0f4f9;
+            --surface: #ffffff;
+            --surface2: #f8fafc;
+            --text: #1a2340;
+            --text-muted: #6b7a99;
+            --border: #dde3ee;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --shadow-sm: 0 2px 8px rgba(74,144,226,0.07);
+            --shadow-md: 0 6px 24px rgba(74,144,226,0.12);
+            --radius: 14px;
+        }
+        [data-theme="dark"] {
+            --bg: #0d1117; --surface: #161b25; --surface2: #1c2333;
+            --text: #e6edf3; --text-muted: #8b949e; --border: #30363d;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.3); --shadow-md: 0 6px 24px rgba(0,0,0,0.4);
+        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); transition: background 0.3s, color 0.3s; }
+
+        /* ── Login Screen ── */
+        #loginScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #1a2340 0%, #2d3f6e 100%);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999;
+        }
+        .login-logo { font-size: 42px; color: #4a90e2; font-weight: 800; letter-spacing: -1px; margin-bottom: 6px; }
+        .login-logo span { color: #7c5fe6; }
+        .login-sub { color: rgba(255,255,255,0.5); font-size: 13px; margin-bottom: 36px; letter-spacing: 2px; text-transform: uppercase; }
+        .login-box {
+            background: rgba(255,255,255,0.05); backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 36px 32px; border-radius: 20px;
+            width: 90%; max-width: 420px;
+        }
+        .login-box h2 { color: white; font-size: 22px; font-weight: 700; margin-bottom: 24px; text-align: center; }
+        .login-box input {
+            width: 100%; padding: 14px 16px; margin-bottom: 14px;
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
+            background: rgba(255,255,255,0.08); color: white; font-size: 15px;
+            font-family: 'Outfit', sans-serif; outline: none;
+            transition: border-color 0.2s;
+        }
+        .login-box input::placeholder { color: rgba(255,255,255,0.4); }
+        .login-box input:focus { border-color: #4a90e2; }
+        .login-btn {
+            width: 100%; padding: 14px; border: none; border-radius: 10px;
+            background: linear-gradient(135deg, #4a90e2, #7c5fe6);
+            color: white; font-size: 16px; font-weight: 700; cursor: pointer;
+            font-family: 'Outfit', sans-serif; transition: opacity 0.2s, transform 0.2s;
+        }
+        .login-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        #loginErr { color: #ff6b6b; font-size: 13px; margin-top: 12px; text-align: center; display: none; }
+
+        /* ── Header ── */
+        header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 24px; height: 64px;
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+        .logo { font-size: 24px; font-weight: 800; color: var(--primary); }
+        .logo span { color: var(--accent); font-size: 12px; font-weight: 600; background: rgba(124,95,230,0.1); padding: 3px 8px; border-radius: 50px; margin-left: 8px; vertical-align: middle; }
+        .header-actions { display: flex; gap: 8px; align-items: center; }
+        .hbtn {
+            padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border);
+            background: var(--surface2); color: var(--text-muted); cursor: pointer;
+            font-size: 13px; font-family: 'Outfit', sans-serif; font-weight: 600;
+            display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+        }
+        .hbtn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        .hbtn.danger:hover { background: var(--danger); border-color: var(--danger); color: white; }
+
+        /* ── Layout ── */
+        .layout { display: flex; min-height: calc(100vh - 64px); }
+
+        /* ── Sidebar ── */
+        #sidebar {
+            width: 240px; background: var(--surface); border-right: 1px solid var(--border);
+            padding: 20px 0; flex-shrink: 0; position: sticky;
+            top: 64px; height: calc(100vh - 64px); overflow-y: auto;
+        }
+        .sidebar-section { padding: 8px 16px 4px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .nav-item {
+            display: flex; align-items: center; gap: 10px; padding: 11px 20px;
+            color: var(--text-muted); text-decoration: none; font-size: 14px; font-weight: 500;
+            cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+            transition: all 0.2s; border-radius: 0;
+        }
+        .nav-item:hover, .nav-item.active { background: rgba(74,144,226,0.08); color: var(--primary); }
+        .nav-item i { width: 18px; text-align: center; }
+        .nav-item.danger:hover { color: var(--danger); background: rgba(231,76,60,0.08); }
+
+        /* ── Main Content ── */
+        .main { flex: 1; padding: 28px; overflow-y: auto; }
+
+        /* ── Sections ── */
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* ── Page Title ── */
+        .page-title { font-size: 22px; font-weight: 800; margin-bottom: 20px; color: var(--text); display: flex; align-items: center; gap: 10px; }
+        .page-title i { color: var(--primary); }
+
+        /* ── Stats Cards ── */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+        .stat-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 20px; box-shadow: var(--shadow-sm);
+        }
+        .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .stat-value { font-size: 32px; font-weight: 800; color: var(--primary); }
+
+        /* ── Card ── */
+        .card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm);
+            margin-bottom: 20px;
+        }
+        .card-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); color: var(--text); display: flex; align-items: center; gap: 8px; }
+        .card-title i { color: var(--primary); }
+
+        /* ── Table ── */
+        .tbl { width: 100%; border-collapse: collapse; }
+        .tbl th { text-align: left; padding: 10px 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; border-bottom: 2px solid var(--border); }
+        .tbl td { padding: 14px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
+        .tbl tr:last-child td { border-bottom: none; }
+        .tbl tr:hover td { background: var(--surface2); }
+        .tbl-actions { display: flex; gap: 6px; }
+
+        /* ── Badges ── */
+        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 50px; font-size: 11px; font-weight: 700; }
+        .badge-active { background: rgba(46,204,113,0.15); color: #27ae60; }
+        .badge-stopped { background: rgba(231,76,60,0.15); color: var(--danger); }
+        .badge-owner { background: rgba(124,95,230,0.15); color: var(--accent); }
+
+        /* ── Buttons ── */
+        .btn { padding: 9px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; font-family: 'Outfit', sans-serif; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { opacity: 0.85; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-warning:hover { opacity: 0.85; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { opacity: 0.85; }
+        .btn-outline { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+        /* ── Form ── */
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px;
+            background: var(--surface2); color: var(--text); font-size: 14px;
+            font-family: 'Outfit', sans-serif; outline: none; transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); }
+        .row { display: flex; gap: 14px; }
+        .row > * { flex: 1; }
+
+        /* ── Modal ── */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(6px); z-index: 1000; justify-content: center; align-items: center; padding: 16px; }
+        .modal-overlay.open { display: flex; }
+        .modal-box { background: var(--surface); border-radius: 20px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-md); border: 1px solid var(--border); animation: popIn 0.3s cubic-bezier(0.22,1,0.36,1) both; }
+        @keyframes popIn { from { transform: scale(0.94) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 18px; font-weight: 700; }
+        .modal-close { background: none; border: none; font-size: 22px; color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
+        .modal-close:hover { color: var(--danger); }
+        .modal-body { padding: 24px; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+        /* ── Notification Box ── */
+        .notif-list { display: flex; flex-direction: column; gap: 10px; }
+        .notif-item {
+            background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+            padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start;
+        }
+        .notif-item.unread { border-left: 3px solid var(--primary); }
+        .notif-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+        .notif-icon.edit { background: rgba(74,144,226,0.12); color: var(--primary); }
+        .notif-icon.host { background: rgba(124,95,230,0.12); color: var(--accent); }
+        .notif-content { flex: 1; }
+        .notif-title { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+        .notif-time { font-size: 11px; color: var(--text-muted); }
+        .notif-badge { background: var(--danger); color: white; border-radius: 50px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
+
+        /* ── Toast ── */
+        #toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: var(--surface); padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; opacity: 0; transition: opacity 0.3s; z-index: 9998; pointer-events: none; }
+        #toast.show { opacity: 1; }
+
+        /* ── Support Editor ── */
+        .support-preview { background: var(--surface2); border-radius: 10px; padding: 16px; border: 1px solid var(--border); margin-top: 16px; }
+        .support-preview h4 { font-size: 14px; color: var(--text-muted); margin-bottom: 10px; }
+        .sup-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .sup-item:last-child { border-bottom: none; }
+        .sup-item i { width: 20px; color: var(--primary); }
+
+        @media (max-width: 768px) {
+            #sidebar { display: none; }
+            .row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══ LOGIN SCREEN ══ -->
+<div id="loginScreen">
+    <div class="login-logo">allwara<span style="color:#7c5fe6">9999</span></div>
+    <div class="login-sub">Owner Control Panel</div>
+    <div class="login-box">
+        <h2><i class="fas fa-shield-alt" style="color:#4a90e2;"></i> Owner Login</h2>
+        <input type="text" id="ownerIdInput" placeholder="Owner ID" autocomplete="off">
+        <input type="password" id="ownerPassInput" placeholder="Owner Password">
+        <button class="login-btn" onclick="ownerLogin()"><i class="fas fa-sign-in-alt"></i> Login</button>
+        <p id="loginErr">⚠ Invalid Owner ID or Password</p>
+    </div>
+</div>
+
+<!-- ══ MAIN APP ══ -->
+<div id="mainApp" style="display:none;">
+
+    <!-- Header -->
+    <header>
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div class="logo">allwara <span>OWNER</span></div>
+        </div>
+        <div class="header-actions">
+            <button class="hbtn" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+            <button class="hbtn danger" onclick="ownerLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside id="sidebar">
+            <div class="sidebar-section">Main</div>
+            <button class="nav-item active" onclick="showSection('dashboard', this)"><i class="fas fa-tachometer-alt"></i> Dashboard</button>
+            <button class="nav-item" onclick="showSection('notifications', this)">
+                <i class="fas fa-bell"></i> Notifications
+                <span id="notifBadge" class="notif-badge" style="margin-left:auto; display:none;">0</span>
+            </button>
+
+            <div class="sidebar-section" style="margin-top:12px;">Host Management</div>
+            <button class="nav-item" onclick="showSection('hostAccounts', this)"><i class="fas fa-users-cog"></i> Host Accounts</button>
+
+            <div class="sidebar-section" style="margin-top:12px;">Settings</div>
+            <button class="nav-item" onclick="showSection('ownerAccount', this)"><i class="fas fa-user-shield"></i> My Account</button>
+            <button class="nav-item" onclick="showSection('supportEditor', this)"><i class="fas fa-headset"></i> Support Editor</button>
+
+            <div class="sidebar-section" style="margin-top:12px;">Danger</div>
+            <button class="nav-item danger" onclick="ownerLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main">
+
+            <!-- ── Dashboard ── -->
+            <div id="sec-dashboard" class="section active">
+                <div class="page-title"><i class="fas fa-tachometer-alt"></i> Dashboard</div>
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-label">Total Hosts</div><div class="stat-value" id="statHosts">0</div></div>
+                    <div class="stat-card"><div class="stat-label">Active Hosts</div><div class="stat-value" id="statActive" style="color:#2ecc71;">0</div></div>
+                    <div class="stat-card"><div class="stat-label">Stopped Hosts</div><div class="stat-value" id="statStopped" style="color:#e74c3c;">0</div></div>
+                    <div class="stat-card"><div class="stat-label">Notifications</div><div class="stat-value" id="statNotifs">0</div></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-users"></i> Host Accounts Overview</div>
+                    <div id="dashHostList"><p style="color:var(--text-muted);">Loading...</p></div>
+                </div>
+            </div>
+
+            <!-- ── Notifications ── -->
+            <div id="sec-notifications" class="section">
+                <div class="page-title"><i class="fas fa-bell"></i> Notifications</div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                    <p style="color:var(--text-muted);font-size:14px;">Host panel edits aur activities ki notifications yahaan aayengi.</p>
+                    <button class="btn btn-outline btn-sm" onclick="clearAllNotifications()"><i class="fas fa-trash"></i> Clear All</button>
+                </div>
+                <div class="notif-list" id="notifList"><p style="color:var(--text-muted);">Koi notification nahi.</p></div>
+            </div>
+
+            <!-- ── Host Accounts ── -->
+            <div id="sec-hostAccounts" class="section">
+                <div class="page-title"><i class="fas fa-users-cog"></i> Host Accounts</div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                    <p style="color:var(--text-muted);font-size:14px;">Nayi Host ID banayein, edit ya delete karein.</p>
+                    <button class="btn btn-primary" onclick="openHostModal()"><i class="fas fa-plus"></i> Nayi Host ID Banao</button>
+                </div>
+                <div class="card" style="padding:0;overflow:hidden;">
+                    <table class="tbl">
+                        <thead>
+                            <tr>
+                                <th>Host ID</th>
+                                <th>Status</th>
+                                <th>Banane ki Tarik</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hostTableBody">
+                            <tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:30px;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ── Owner Account ── -->
+            <div id="sec-ownerAccount" class="section">
+                <div class="page-title"><i class="fas fa-user-shield"></i> Mera Account (Owner)</div>
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-lock"></i> Owner Credentials Change Karo</div>
+                    <p style="color:var(--text-muted);font-size:14px;margin-bottom:20px;">Owner panel ka ID aur Password yahan change karo.</p>
+                    <div class="row">
+                        <div class="form-group">
+                            <label>Naya Owner ID</label>
+                            <input type="text" id="newOwnerId" placeholder="Naya ID dalo">
+                        </div>
+                        <div class="form-group">
+                            <label>Naya Password</label>
+                            <input type="password" id="newOwnerPass" placeholder="Naya password dalo">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Purana Password (Confirm)</label>
+                        <input type="password" id="currentOwnerPass" placeholder="Purana password confirm karo">
+                    </div>
+                    <button class="btn btn-primary" onclick="changeOwnerCredentials()"><i class="fas fa-save"></i> Save Changes</button>
+                </div>
+            </div>
+
+            <!-- ── Support Editor ── -->
+            <div id="sec-supportEditor" class="section">
+                <div class="page-title"><i class="fas fa-headset"></i> Support Page Editor</div>
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-edit"></i> Support Details Edit Karo</div>
+                    <p style="color:var(--text-muted);font-size:14px;margin-bottom:20px;">Ye details User Panel ke Support section mein dikhenge. Owner hi inhe control kar sakta hai.</p>
+                    <div class="form-group"><label>Support Email</label><input type="email" id="supEmail" placeholder="support@allwara.com"></div>
+                    <div class="row">
+                        <div class="form-group"><label>Support Phone</label><input type="tel" id="supPhone" placeholder="+91 0000000000"></div>
+                        <div class="form-group"><label>WhatsApp Number</label><input type="tel" id="supWhatsApp" placeholder="+91 0000000000"></div>
+                    </div>
+                    <div class="form-group"><label><i class="fas fa-map-pin" style="color:#e74c3c;"></i> Google Maps Link</label><input type="url" id="supMap" placeholder="https://maps.app.goo.gl/..."></div>
+                    <div class="row">
+                        <div class="form-group"><label><i class="fab fa-instagram" style="color:#E1306C;"></i> Instagram Link</label><input type="url" id="supInsta" placeholder="https://instagram.com/..."></div>
+                        <div class="form-group"><label><i class="fab fa-facebook-f" style="color:#1877F2;"></i> Facebook Link</label><input type="url" id="supFb" placeholder="https://facebook.com/..."></div>
+                    </div>
+                    <div class="form-group"><label>Support Message / Timing</label><textarea id="supMsg" rows="3" placeholder="Available Mon-Fri, 10 AM to 6 PM..."></textarea></div>
+                    <button class="btn btn-primary" onclick="saveSupportData()"><i class="fas fa-save"></i> Support Details Save Karo</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-eye"></i> Current Support Preview</div>
+                    <div class="support-preview" id="supportPreview">
+                        <p style="color:var(--text-muted);font-size:13px;">Koi data nahi mila.</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<!-- ── Host Account Modal ── -->
+<div class="modal-overlay" id="hostModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="hostModalTitle"><i class="fas fa-user-plus"></i> Nayi Host ID Banao</h3>
+            <button class="modal-close" onclick="closeHostModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="editHostKey">
+            <div class="form-group">
+                <label>Host ID (Unique Name) *</label>
+                <input type="text" id="hostIdInput" placeholder="e.g. host_delhi_01" autocomplete="off">
+                <small style="color:var(--text-muted);">Ye ID same doosre host ki ID se match nahi kar sakti.</small>
+            </div>
+            <div class="form-group">
+                <label>Host Password *</label>
+                <input type="password" id="hostPassInput" placeholder="Strong password dalo">
+            </div>
+            <div class="form-group">
+                <label>Host ka Naam (Optional)</label>
+                <input type="text" id="hostNameInput" placeholder="e.g. Delhi Branch Host">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeHostModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveHost()"><i class="fas fa-save"></i> Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Confirm Modal ── -->
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal-box" style="max-width:420px;">
+        <div class="modal-header">
+            <h3 id="confirmTitle">Confirm Action</h3>
+            <button class="modal-close" onclick="closeConfirm()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <p id="confirmMsg" style="font-size:15px;color:var(--text-muted);"></p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeConfirm()">Cancel</button>
+            <button class="btn btn-danger" id="confirmOkBtn" onclick="">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- ══ FIREBASE + JS ══ -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getDatabase, ref, push, set, get, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDEfr7xM38sv2V36MdbY0dKs-MoOqaEBC4",
+        authDomain: "allwara.firebaseapp.com",
+        databaseURL: "https://allwara-default-rtdb.firebaseio.com",
+        projectId: "allwara",
+        storageBucket: "allwara.firebasestorage.app",
+        messagingSenderId: "750105109586",
+        appId: "1:750105109586:web:ed06d9be7fee6427032b8b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let currentOwnerCreds = { id: 'owner9999', password: 'allwara@owner' };
+    let globalHosts = [];
+    let globalNotifications = [];
+    let unreadCount = 0;
+
+    // ── Login ──
+    window.ownerLogin = function() {
+        const id = document.getElementById('ownerIdInput').value.trim();
+        const pass = document.getElementById('ownerPassInput').value.trim();
+
+        // Load credentials from DB first
+        get(ref(db, 'ownerCredentials')).then(snap => {
+            let creds = { id: 'owner9999', password: 'allwara@owner' };
+            if (snap.exists()) creds = snap.val();
+
+            if (id === creds.id && pass === creds.password) {
+                localStorage.setItem('allwara_owner_logged', 'true');
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                startOwnerPanel();
+            } else {
+                document.getElementById('loginErr').style.display = 'block';
+            }
+        }).catch(() => {
+            if (id === 'owner9999' && pass === 'allwara@owner') {
+                localStorage.setItem('allwara_owner_logged', 'true');
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                startOwnerPanel();
+            } else {
+                document.getElementById('loginErr').style.display = 'block';
+            }
+        });
+    };
+
+    window.ownerLogout = function() {
+        localStorage.removeItem('allwara_owner_logged');
+        location.reload();
+    };
+
+    // ── Auto Login ──
+    window.onload = function() {
+        if (localStorage.getItem('allwara_owner_logged') === 'true') {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            startOwnerPanel();
+        }
+        if (localStorage.getItem('allwaraTheme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    };
+
+    function startOwnerPanel() {
+        listenHosts();
+        listenNotifications();
+        loadSupportData();
+    }
+
+    // ── Host Listeners ──
+    function listenHosts() {
+        onValue(ref(db, 'hostAccounts'), snap => {
+            globalHosts = [];
+            if (snap.exists()) {
+                const data = snap.val();
+                for (let key in data) globalHosts.push({ id: key, ...data[key] });
+            }
+            renderHostTable();
+            renderDashHostList();
+            updateStats();
+        });
+    }
+
+    function renderHostTable() {
+        const tbody = document.getElementById('hostTableBody');
+        if (globalHosts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:30px;">Koi host account nahi banaya gaya.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = globalHosts.map(h => `
+            <tr>
+                <td>
+                    <strong>${h.hostId}</strong>
+                    ${h.name ? `<br><small style="color:var(--text-muted);">${h.name}</small>` : ''}
+                </td>
+                <td>
+                    ${h.isStopped
+                        ? '<span class="badge badge-stopped"><i class="fas fa-pause"></i> Stopped</span>'
+                        : '<span class="badge badge-active"><i class="fas fa-check"></i> Active</span>'
+                    }
+                </td>
+                <td style="color:var(--text-muted);font-size:13px;">${h.createdAt || '-'}</td>
+                <td>
+                    <div class="tbl-actions">
+                        <button class="btn btn-outline btn-sm" onclick="openHostModal('${h.id}')"><i class="fas fa-edit"></i></button>
+                        ${h.isStopped
+                            ? `<button class="btn btn-success btn-sm" onclick="toggleHostStop('${h.id}', false)"><i class="fas fa-play"></i> Start</button>`
+                            : `<button class="btn btn-warning btn-sm" onclick="toggleHostStop('${h.id}', true)"><i class="fas fa-pause"></i> Stop</button>`
+                        }
+                        <button class="btn btn-danger btn-sm" onclick="deleteHostConfirm('${h.id}', '${h.hostId}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function renderDashHostList() {
+        const el = document.getElementById('dashHostList');
+        if (globalHosts.length === 0) {
+            el.innerHTML = '<p style="color:var(--text-muted);">Koi host nahi mila.</p>';
+            return;
+        }
+        el.innerHTML = `<table class="tbl">
+            <thead><tr><th>Host ID</th><th>Naam</th><th>Status</th></tr></thead>
+            <tbody>${globalHosts.map(h => `
+                <tr>
+                    <td><strong>${h.hostId}</strong></td>
+                    <td style="color:var(--text-muted);">${h.name || '-'}</td>
+                    <td>${h.isStopped ? '<span class="badge badge-stopped">Stopped</span>' : '<span class="badge badge-active">Active</span>'}</td>
+                </tr>
+            `).join('')}</tbody>
+        </table>`;
+    }
+
+    function updateStats() {
+        const total = globalHosts.length;
+        const stopped = globalHosts.filter(h => h.isStopped).length;
+        document.getElementById('statHosts').textContent = total;
+        document.getElementById('statActive').textContent = total - stopped;
+        document.getElementById('statStopped').textContent = stopped;
+    }
+
+    // ── Notifications Listener ──
+    function listenNotifications() {
+        onValue(ref(db, 'ownerNotifications'), snap => {
+            globalNotifications = [];
+            if (snap.exists()) {
+                const data = snap.val();
+                for (let key in data) globalNotifications.push({ id: key, ...data[key] });
+                globalNotifications.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            }
+            unreadCount = globalNotifications.filter(n => !n.read).length;
+            renderNotifications();
+            document.getElementById('statNotifs').textContent = globalNotifications.length;
+
+            const badge = document.getElementById('notifBadge');
+            if (unreadCount > 0) {
+                badge.style.display = 'inline-block';
+                badge.textContent = unreadCount;
+            } else {
+                badge.style.display = 'none';
+            }
+        });
+    }
+
+    function renderNotifications() {
+        const el = document.getElementById('notifList');
+        if (globalNotifications.length === 0) {
+            el.innerHTML = '<p style="color:var(--text-muted);">Koi notification nahi.</p>';
+            return;
+        }
+        el.innerHTML = globalNotifications.map(n => `
+            <div class="notif-item ${!n.read ? 'unread' : ''}" onclick="markRead('${n.id}')">
+                <div class="notif-icon ${n.type === 'host_edit' ? 'edit' : 'host'}">
+                    <i class="fas ${n.type === 'host_edit' ? 'fa-edit' : 'fa-user'}"></i>
+                </div>
+                <div class="notif-content">
+                    <div class="notif-title">${n.message || 'Notification'}</div>
+                    <div class="notif-time">${n.hostId ? 'Host: ' + n.hostId + ' • ' : ''}${n.timeStr || ''}</div>
+                </div>
+                ${!n.read ? '<span style="width:8px;height:8px;background:var(--primary);border-radius:50%;display:inline-block;flex-shrink:0;margin-top:6px;"></span>' : ''}
+            </div>
+        `).join('');
+    }
+
+    window.markRead = function(id) {
+        update(ref(db, 'ownerNotifications/' + id), { read: true });
+    };
+
+    window.clearAllNotifications = function() {
+        if (globalNotifications.length === 0) return;
+        showConfirm('Sab Notifications Clear Karo', 'Kya aap sari notifications delete karna chahte hain?', () => {
+            remove(ref(db, 'ownerNotifications')).then(() => showToast('✅ Sab notifications clear ho gayi'));
+        });
+    };
+
+    // ── Host CRUD ──
+    window.openHostModal = function(id = null) {
+        document.getElementById('editHostKey').value = '';
+        document.getElementById('hostIdInput').value = '';
+        document.getElementById('hostPassInput').value = '';
+        document.getElementById('hostNameInput').value = '';
+        document.getElementById('hostModalTitle').innerHTML = '<i class="fas fa-user-plus"></i> Nayi Host ID Banao';
+
+        if (id) {
+            const h = globalHosts.find(x => x.id === id);
+            if (h) {
+                document.getElementById('editHostKey').value = h.id;
+                document.getElementById('hostIdInput').value = h.hostId;
+                document.getElementById('hostPassInput').value = h.password;
+                document.getElementById('hostNameInput').value = h.name || '';
+                document.getElementById('hostModalTitle').innerHTML = `<i class="fas fa-edit"></i> Host Edit: ${h.hostId}`;
+            }
+        }
+        document.getElementById('hostModal').classList.add('open');
+    };
+
+    window.closeHostModal = function() {
+        document.getElementById('hostModal').classList.remove('open');
+    };
+
+    window.saveHost = function() {
+        const editKey = document.getElementById('editHostKey').value;
+        const hostId = document.getElementById('hostIdInput').value.trim();
+        const password = document.getElementById('hostPassInput').value.trim();
+        const name = document.getElementById('hostNameInput').value.trim();
+
+        if (!hostId || !password) return showToast('⚠ Host ID aur Password zaroori hain!');
+
+        // Check duplicate ID (ignore self on edit)
+        const duplicate = globalHosts.find(h => h.hostId.toLowerCase() === hostId.toLowerCase() && h.id !== editKey);
+        if (duplicate) return showToast('⚠ Ye Host ID pehle se exist karti hai!');
+
+        const payload = {
+            hostId, password, name,
+            isStopped: false,
+            createdAt: editKey ? (globalHosts.find(h => h.id === editKey)?.createdAt || new Date().toLocaleDateString('hi-IN')) : new Date().toLocaleDateString('hi-IN')
+        };
+
+        if (editKey) {
+            update(ref(db, 'hostAccounts/' + editKey), payload).then(() => {
+                showToast('✅ Host account update ho gaya!');
+                closeHostModal();
+            }).catch(e => showToast('Error: ' + e.message));
+        } else {
+            push(ref(db, 'hostAccounts'), payload).then(() => {
+                showToast('✅ Nayi Host ID ban gayi!');
+                closeHostModal();
+            }).catch(e => showToast('Error: ' + e.message));
+        }
+    };
+
+    window.toggleHostStop = function(id, stop) {
+        const h = globalHosts.find(x => x.id === id);
+        const msg = stop ? `"${h?.hostId}" ko temporarily stop karna chahte hain?` : `"${h?.hostId}" ko dubara activate karna chahte hain?`;
+        showConfirm(stop ? 'Host Stop Karo' : 'Host Start Karo', msg, () => {
+            update(ref(db, 'hostAccounts/' + id), { isStopped: stop }).then(() => {
+                showToast(stop ? '⏸ Host stop ho gaya!' : '▶ Host active ho gaya!');
+            });
+        });
+    };
+
+    window.deleteHostConfirm = function(id, hostId) {
+        showConfirm('Host Delete Karo', `"${hostId}" account permanently delete karna chahte hain? Ye action undo nahi ho sakta.`, () => {
+            remove(ref(db, 'hostAccounts/' + id)).then(() => {
+                showToast('🗑 Host delete ho gaya!');
+            });
+        });
+    };
+
+    // ── Owner Credentials ──
+    window.changeOwnerCredentials = function() {
+        const newId = document.getElementById('newOwnerId').value.trim();
+        const newPass = document.getElementById('newOwnerPass').value.trim();
+        const currentPass = document.getElementById('currentOwnerPass').value.trim();
+
+        get(ref(db, 'ownerCredentials')).then(snap => {
+            let creds = { id: 'owner9999', password: 'allwara@owner' };
+            if (snap.exists()) creds = snap.val();
+
+            if (currentPass !== creds.password) {
+                return showToast('⚠ Purana password galat hai!');
+            }
+            if (!newId || !newPass) {
+                return showToast('⚠ Naya ID aur Password dono bharo!');
+            }
+
+            set(ref(db, 'ownerCredentials'), { id: newId, password: newPass }).then(() => {
+                showToast('✅ Owner credentials update ho gaye!');
+                document.getElementById('newOwnerId').value = '';
+                document.getElementById('newOwnerPass').value = '';
+                document.getElementById('currentOwnerPass').value = '';
+            });
+        });
+    };
+
+    // ── Support ──
+    function loadSupportData() {
+        get(ref(db, 'supportDetails')).then(snap => {
+            if (snap.exists()) {
+                const d = snap.val();
+                document.getElementById('supEmail').value = d.email || '';
+                document.getElementById('supPhone').value = d.phone || '';
+                document.getElementById('supWhatsApp').value = d.whatsapp || '';
+                document.getElementById('supMap').value = d.mapLink || '';
+                document.getElementById('supInsta').value = d.instaLink || '';
+                document.getElementById('supFb').value = d.fbLink || '';
+                document.getElementById('supMsg').value = d.message || '';
+                renderSupportPreview(d);
+            }
+        });
+    }
+
+    window.saveSupportData = function() {
+        const data = {
+            email: document.getElementById('supEmail').value.trim(),
+            phone: document.getElementById('supPhone').value.trim(),
+            whatsapp: document.getElementById('supWhatsApp').value.trim(),
+            mapLink: document.getElementById('supMap').value.trim(),
+            instaLink: document.getElementById('supInsta').value.trim(),
+            fbLink: document.getElementById('supFb').value.trim(),
+            message: document.getElementById('supMsg').value.trim(),
+            updatedBy: 'owner',
+            updatedAt: new Date().toLocaleString('hi-IN')
+        };
+
+        set(ref(db, 'supportDetails'), data).then(() => {
+            showToast('✅ Support details save ho gaye!');
+            renderSupportPreview(data);
+        }).catch(e => showToast('Error: ' + e.message));
+    };
+
+    function renderSupportPreview(d) {
+        const el = document.getElementById('supportPreview');
+        const items = [
+            d.email ? `<div class="sup-item"><i class="fas fa-envelope"></i> ${d.email}</div>` : '',
+            d.phone ? `<div class="sup-item"><i class="fas fa-phone"></i> ${d.phone}</div>` : '',
+            d.whatsapp ? `<div class="sup-item"><i class="fab fa-whatsapp"></i> ${d.whatsapp}</div>` : '',
+            d.mapLink ? `<div class="sup-item"><i class="fas fa-map-pin"></i> Google Maps</div>` : '',
+            d.instaLink ? `<div class="sup-item"><i class="fab fa-instagram"></i> Instagram</div>` : '',
+            d.fbLink ? `<div class="sup-item"><i class="fab fa-facebook-f"></i> Facebook</div>` : '',
+            d.message ? `<div class="sup-item"><i class="fas fa-comment"></i> ${d.message}</div>` : '',
+        ].filter(Boolean).join('');
+        el.innerHTML = `<h4>📋 Support Preview (User ko ye dikhega)</h4>${items || '<p style="color:var(--text-muted);font-size:13px;">Koi data nahi.</p>'}`;
+    }
+
+    // ── Confirm Modal ──
+    let confirmCallback = null;
+    window.showConfirm = function(title, msg, cb) {
+        confirmCallback = cb;
+        document.getElementById('confirmTitle').textContent = title;
+        document.getElementById('confirmMsg').textContent = msg;
+        document.getElementById('confirmOkBtn').onclick = function() {
+            if (confirmCallback) confirmCallback();
+            closeConfirm();
+        };
+        document.getElementById('confirmModal').classList.add('open');
+    };
+    window.closeConfirm = function() {
+        document.getElementById('confirmModal').classList.remove('open');
+        confirmCallback = null;
+    };
+
+    // ── Toast ──
+    window.showToast = function(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    };
+</script>
+
+<script>
+    // ── Section Nav ──
+    window.showSection = function(name, el) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        document.getElementById('sec-' + name).classList.add('active');
+        if (el) el.classList.add('active');
+    };
+
+    // ── Theme ──
+    window.toggleTheme = function() {
+        const html = document.documentElement;
+        const next = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('allwaraTheme', next);
+    };
+</script>
+
+</body>
+</html>
